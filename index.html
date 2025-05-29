@@ -3,76 +3,70 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pokémon Card Tracker</title>
 
-  <!-- Manifest and App Icons -->
+  <!-- Web App Manifest and Icons -->
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <meta name="theme-color" content="#ffffff" />
 
-  <title>Pokémon Card Tracker</title>
-  <!-- Your styles and scripts go here -->
-</head>
-<body>
-  <!-- Your app content -->
-</body>
-</html>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pokémon Card Tracker</title>
   <style>
     body {
-      font-family: sans-serif;
-      padding: 1em;
-      background: #f9f9f9;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 10px;
+      background-color: #f2f2f2;
     }
-    .search-container {
-      position: relative;
-      margin-bottom: 1em;
+    h1 {
+      text-align: center;
     }
-    .search-container input[type="text"] {
-      width: 100%;
-      padding: 0.5em 0.5em 0.5em 2.5em;
-      font-size: 1em;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      background: #fff url('data:image/svg+xml;utf8,<svg fill="gray" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 5L20.49 19l-5-5zm-6 0C8.01 14 6 11.99 6 9.5S8.01 5 10.5 5 15 7.01 15 9.5 12.99 14 10.5 14z"/></svg>') no-repeat 0.6em center;
-      background-size: 1em;
+    .search {
+      text-align: center;
+      margin-bottom: 10px;
     }
-    .counter {
-      margin-bottom: 1em;
+    #remaining {
+      text-align: center;
+      margin-bottom: 10px;
       font-weight: bold;
     }
     .pokemon {
       display: flex;
       align-items: center;
-      padding: 0.4em 0;
-      border-bottom: 1px solid #ddd;
+      background: #fff;
+      margin: 5px;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-    .pokemon label {
-      margin-left: 0.5em;
-      flex: 1;
+    .pokemon input {
+      margin-right: 10px;
     }
-    .pokemon a {
-      text-decoration: none;
-      font-size: 1.2em;
-      color: #555;
-      margin-left: 0.5em;
+    .sets {
+      margin-left: auto;
     }
-    .pokemon a:hover {
-      color: #000;
+    .set-link {
+      margin-left: 5px;
+      font-size: 0.9em;
+    }
+    @media (max-width: 600px) {
+      .pokemon {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .sets {
+        margin-left: 0;
+        margin-top: 5px;
+      }
     }
   </style>
 </head>
 <body>
-
   <h1>Pokémon Card Tracker</h1>
-  <div class="counter" id="counter">Collected: 0 / 1025</div>
-
-  <div class="search-container">
-    <input type="text" id="search" placeholder="Search Pokémon...">
+  <div class="search">
+    <input type="text" id="searchBox" placeholder="Search Pokémon..." />
   </div>
-
-  <div id="pokemon-list"></div>
+  <div id="remaining">Loading...</div>
+  <div id="pokemonList"></div>
 
   <script>
     const pokemonList = [
@@ -264,59 +258,65 @@
   [1013,"Sinistcha"],[1014,"Okidogi"],[1015,"Munkidori"],[1016,"Fezandipiti"],[1017,"Ogerpon"],
   [1018,"Archaludon"],[1019,"Hydrapple"],[1020,"Gouging Fire"],[1021,"Raging Bolt"],
   [1022,"Iron Boulder"],[1023,"Iron Crown"],[1024,"Terapagos"],[1025,"Pecharunt"]
-      // Add more Pokémon here...
+      // Add all the rest here...
     ];
 
-    const listContainer = document.getElementById('pokemon-list');
-    const searchInput = document.getElementById('search');
-    const counter = document.getElementById('counter');
+    const listContainer = document.getElementById("pokemonList");
+    const remainingDisplay = document.getElementById("remaining");
+    const searchBox = document.getElementById("searchBox");
 
-    function renderList(filter = '') {
-      listContainer.innerHTML = '';
-      pokemonList.forEach(([number, name]) => {
-        if (name.toLowerCase().includes(filter.toLowerCase())) {
-          const div = document.createElement('div');
-          div.className = 'pokemon';
-
-          const checkbox = document.createElement('input');
-          checkbox.type = 'checkbox';
-          checkbox.id = `pokemon-${number}`;
-          checkbox.addEventListener('change', updateCounter);
-
-          const label = document.createElement('label');
-          label.htmlFor = checkbox.id;
-          label.textContent = `#${number} ${name}`;
-
-          const link = document.createElement('a');
-          link.href = `https://www.tcgplayer.com/search/all/product?q=${encodeURIComponent(name)}&view=grid`;
-          link.target = '_blank';
-          link.title = `Search ${name} on TCGPlayer`;
-          link.textContent = '🔍';
-
-          div.appendChild(checkbox);
-          div.appendChild(label);
-          div.appendChild(link);
-          listContainer.appendChild(div);
-        }
-      });
-      updateCounter();
+    function updateRemaining() {
+      const total = pokemon.length;
+      const checked = document.querySelectorAll("input[type='checkbox']:checked").length;
+      remainingDisplay.textContent = `${total - checked} / ${total} Pokémon remaining`;
     }
 
-    function updateCounter() {
-      const checkboxes = document.querySelectorAll('#pokemon-list input[type="checkbox"]');
-      let collected = 0;
-      checkboxes.forEach(cb => {
-        if (cb.checked) collected++;
+    function renderList(filter = "") {
+      listContainer.innerHTML = "";
+      const filtered = pokemon.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()));
+      filtered.forEach((p, index) => {
+        const div = document.createElement("div");
+        div.className = "pokemon";
+        const id = "poke_" + index;
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = id;
+        checkbox.addEventListener("change", updateRemaining);
+        div.appendChild(checkbox);
+
+        const label = document.createElement("label");
+        label.htmlFor = id;
+        label.textContent = p.name;
+        div.appendChild(label);
+
+        const sets = document.createElement("span");
+        sets.className = "sets";
+        p.sets.forEach(set => {
+          const a = document.createElement("a");
+          a.href = `https://www.tcgplayer.com/search/all/product?q=${encodeURIComponent(p.name)} ${encodeURIComponent(set)}&view=grid`;
+          a.target = "_blank";
+          a.className = "set-link";
+          a.textContent = set;
+          sets.appendChild(a);
+        });
+        div.appendChild(sets);
+        listContainer.appendChild(div);
       });
-      counter.textContent = `Collected: ${collected} / 1025`;
+      updateRemaining();
     }
 
-    searchInput.addEventListener('input', () => {
-      renderList(searchInput.value);
+    searchBox.addEventListener("input", () => {
+      renderList(searchBox.value);
     });
+
+    // PWA Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(error => {
+        console.error('Service Worker registration failed:', error);
+      });
+    }
 
     renderList();
   </script>
-
 </body>
 </html>
