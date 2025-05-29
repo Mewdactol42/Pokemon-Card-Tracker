@@ -1,74 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
- <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png">
   <title>Pokémon Card Tracker</title>
-
-  <!-- Web App Manifest and Icons -->
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
-  <meta name="theme-color" content="#ffffff" />
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
       margin: 0;
-      padding: 10px;
-      background-color: #f2f2f2;
+      padding: 1rem;
+      background: #f8f8f8;
+      color: #333;
     }
+
     h1 {
+      font-size: 1.5rem;
       text-align: center;
     }
-    .search {
-      text-align: center;
-      margin-bottom: 10px;
+
+    #search {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      font-size: 1rem;
     }
-    #remaining {
-      text-align: center;
-      margin-bottom: 10px;
-      font-weight: bold;
-    }
-    .pokemon {
+
+    .pokemon-list {
       display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .pokemon-item {
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-      background: #fff;
-      margin: 5px;
-      padding: 10px;
-      border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding: 0.5rem;
+      background: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
-    .pokemon input {
-      margin-right: 10px;
+
+    label {
+      flex: 1;
+      padding-left: 0.5rem;
     }
-    .sets {
-      margin-left: auto;
-    }
-    .set-link {
-      margin-left: 5px;
-      font-size: 0.9em;
-    }
-    @media (max-width: 600px) {
-      .pokemon {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .sets {
-        margin-left: 0;
-        margin-top: 5px;
-      }
+
+    #counter {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 1rem;
     }
   </style>
 </head>
 <body>
   <h1>Pokémon Card Tracker</h1>
-  <div class="search">
-    <input type="text" id="searchBox" placeholder="Search Pokémon..." />
-  </div>
-  <div id="remaining">Loading...</div>
-  <div id="pokemonList"></div>
+  <input type="text" id="search" placeholder="Search Pokémon...">
+
+  <div id="counter">Collected: 0 / 1025</div>
+
+  <div class="pokemon-list" id="pokemonList"></div>
 
   <script>
     const pokemonList = [
@@ -259,66 +254,62 @@
   [1009,"Walking Wake"],[1010,"Iron Leaves"],[1011,"Dipplin"],[1012,"Poltchageist"],
   [1013,"Sinistcha"],[1014,"Okidogi"],[1015,"Munkidori"],[1016,"Fezandipiti"],[1017,"Ogerpon"],
   [1018,"Archaludon"],[1019,"Hydrapple"],[1020,"Gouging Fire"],[1021,"Raging Bolt"],
-  [1022,"Iron Boulder"],[1023,"Iron Crown"],[1024,"Terapagos"],[1025,"Pecharunt"],
-      
-    ];
+  [1022,"Iron Boulder"],[1023,"Iron Crown"],[1024,"Terapagos"],[1025,"Pecharunt"]
+];
 
-    const listContainer = document.getElementById("pokemonList");
-    const remainingDisplay = document.getElementById("remaining");
-    const searchBox = document.getElementById("searchBox");
-
-    function updateRemaining() {
-      const total = pokemon.length;
-      const checked = document.querySelectorAll("input[type='checkbox']:checked").length;
-      remainingDisplay.textContent = `${total - checked} / ${total} Pokémon remaining`;
-    }
+    const list = document.getElementById("pokemonList");
+    const searchInput = document.getElementById("search");
+    const counter = document.getElementById("counter");
 
     function renderList(filter = "") {
-      listContainer.innerHTML = "";
-      const filtered = pokemon.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()));
-      filtered.forEach((p, index) => {
-        const div = document.createElement("div");
-        div.className = "pokemon";
-        const id = "poke_" + index;
+      const collected = JSON.parse(localStorage.getItem("collected") || "{}");
+      list.innerHTML = "";
+
+      const filtered = pokemon.filter(([id, name]) =>
+        name.toLowerCase().includes(filter.toLowerCase())
+      );
+
+      filtered.forEach(([id, name]) => {
+        const item = document.createElement("div");
+        item.className = "pokemon-item";
+
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
-        checkbox.id = id;
-        checkbox.addEventListener("change", updateRemaining);
-        div.appendChild(checkbox);
+        checkbox.checked = collected[id];
+        checkbox.addEventListener("change", () => {
+          collected[id] = checkbox.checked;
+          localStorage.setItem("collected", JSON.stringify(collected));
+          updateCounter();
+        });
 
         const label = document.createElement("label");
-        label.htmlFor = id;
-        label.textContent = p.name;
-        div.appendChild(label);
+        label.textContent = `${id}. ${name}`;
 
-        const sets = document.createElement("span");
-        sets.className = "sets";
-        p.sets.forEach(set => {
-          const a = document.createElement("a");
-          a.href = `https://www.tcgplayer.com/search/all/product?q=${encodeURIComponent(p.name)} ${encodeURIComponent(set)}&view=grid`;
-          a.target = "_blank";
-          a.className = "set-link";
-          a.textContent = set;
-          sets.appendChild(a);
-        });
-        div.appendChild(sets);
-        listContainer.appendChild(div);
+        item.appendChild(checkbox);
+        item.appendChild(label);
+        list.appendChild(item);
       });
-      updateRemaining();
+
+      updateCounter();
     }
 
-    searchBox.addEventListener("input", () => {
-      renderList(searchBox.value);
+    function updateCounter() {
+      const collected = JSON.parse(localStorage.getItem("collected") || "{}");
+      const count = Object.values(collected).filter(Boolean).length;
+      counter.textContent = `Collected: ${count} / ${pokemon.length}`;
+    }
+
+    searchInput.addEventListener("input", () => {
+      renderList(searchInput.value);
     });
 
-    // PWA Service Worker Registration
-    if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js")
-    .then(() => console.log("Service Worker Registered"));
-
-    }
-
     renderList();
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js").then(() => {
+        console.log("Service Worker registered.");
+      });
+    }
   </script>
 </body>
 </html>
