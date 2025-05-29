@@ -10,11 +10,22 @@
       padding: 1em;
       background: #f9f9f9;
     }
-    input[type="text"] {
-      width: 100%;
-      padding: 0.5em;
+    .search-container {
+      position: relative;
       margin-bottom: 1em;
+    }
+    .search-container input[type="text"] {
+      width: 100%;
+      padding: 0.5em 0.5em 0.5em 2.5em;
       font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #fff url('data:image/svg+xml;utf8,<svg fill="gray" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 5L20.49 19l-5-5zm-6 0C8.01 14 6 11.99 6 9.5S8.01 5 10.5 5 15 7.01 15 9.5 12.99 14 10.5 14z"/></svg>') no-repeat 0.6em center;
+      background-size: 1em;
+    }
+    .counter {
+      margin-bottom: 1em;
+      font-weight: bold;
     }
     .pokemon {
       display: flex;
@@ -24,10 +35,16 @@
     }
     .pokemon label {
       margin-left: 0.5em;
+      flex: 1;
     }
-    .counter {
-      margin-bottom: 1em;
-      font-weight: bold;
+    .pokemon a {
+      text-decoration: none;
+      font-size: 1.2em;
+      color: #555;
+      margin-left: 0.5em;
+    }
+    .pokemon a:hover {
+      color: #000;
     }
   </style>
 </head>
@@ -35,7 +52,10 @@
 
   <h1>Pokémon Card Tracker</h1>
   <div class="counter" id="counter">Collected: 0 / 1025</div>
-  <input type="text" id="search" placeholder="Search Pokémon...">
+
+  <div class="search-container">
+    <input type="text" id="search" placeholder="Search Pokémon...">
+  </div>
 
   <div id="pokemon-list"></div>
 
@@ -229,7 +249,7 @@
   [1013,"Sinistcha"],[1014,"Okidogi"],[1015,"Munkidori"],[1016,"Fezandipiti"],[1017,"Ogerpon"],
   [1018,"Archaludon"],[1019,"Hydrapple"],[1020,"Gouging Fire"],[1021,"Raging Bolt"],
   [1022,"Iron Boulder"],[1023,"Iron Crown"],[1024,"Terapagos"],[1025,"Pecharunt"]
-      // ... Add remaining Pokémon here
+      // Add more Pokémon here...
     ];
 
     const listContainer = document.getElementById('pokemon-list');
@@ -238,25 +258,32 @@
 
     function renderList(filter = '') {
       listContainer.innerHTML = '';
-      let count = 0;
-
       pokemonList.forEach(([number, name]) => {
         if (name.toLowerCase().includes(filter.toLowerCase())) {
           const div = document.createElement('div');
           div.className = 'pokemon';
+
           const checkbox = document.createElement('input');
           checkbox.type = 'checkbox';
           checkbox.id = `pokemon-${number}`;
           checkbox.addEventListener('change', updateCounter);
+
           const label = document.createElement('label');
           label.htmlFor = checkbox.id;
           label.textContent = `#${number} ${name}`;
+
+          const link = document.createElement('a');
+          link.href = `https://www.tcgplayer.com/search/all/product?q=${encodeURIComponent(name)}&view=grid`;
+          link.target = '_blank';
+          link.title = `Search ${name} on TCGPlayer`;
+          link.textContent = '🔍';
+
           div.appendChild(checkbox);
           div.appendChild(label);
+          div.appendChild(link);
           listContainer.appendChild(div);
         }
       });
-
       updateCounter();
     }
 
