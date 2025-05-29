@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#ffffff">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icon-192.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon-192.png" />
   <title>Pokémon Card Tracker</title>
   <style>
     body {
@@ -20,19 +18,23 @@
     h1 {
       font-size: 1.5rem;
       text-align: center;
+      margin-bottom: 1rem;
     }
 
     #search {
       width: 100%;
       padding: 0.5rem;
-      margin-bottom: 1rem;
       font-size: 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 0.5rem;
+      box-sizing: border-box;
     }
 
-    .pokemon-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+    #counter {
+      text-align: center;
+      margin-bottom: 1rem;
+      font-weight: bold;
     }
 
     .pokemon-item {
@@ -43,27 +45,27 @@
       background: white;
       border-radius: 0.5rem;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
     }
 
-    label {
+    .pokemon-item label {
       flex: 1;
-      padding-left: 0.5rem;
+      margin-left: 0.5rem;
     }
 
-    #counter {
-      text-align: center;
-      margin-top: 1rem;
-      font-size: 1rem;
+    .pokemon-item a {
+      text-decoration: none;
+      font-size: 1.25rem;
+      margin-left: 0.5rem;
     }
   </style>
 </head>
 <body>
   <h1>Pokémon Card Tracker</h1>
-  <input type="text" id="search" placeholder="Search Pokémon...">
-
-  <div id="counter">Collected: 0 / 1025</div>
-
-  <div class="pokemon-list" id="pokemonList"></div>
+  <input type="text" id="search" placeholder="Search Pokémon..." />
+  <div id="counter"></div>
+  <div id="list"></div>
 
   <script>
     const pokemon = [
@@ -255,20 +257,26 @@
   [1013,"Sinistcha"],[1014,"Okidogi"],[1015,"Munkidori"],[1016,"Fezandipiti"],[1017,"Ogerpon"],
   [1018,"Archaludon"],[1019,"Hydrapple"],[1020,"Gouging Fire"],[1021,"Raging Bolt"],
   [1022,"Iron Boulder"],[1023,"Iron Crown"],[1024,"Terapagos"],[1025,"Pecharunt"]
+      // ... up to 1025 in your actual data
     ];
 
-    const list = document.getElementById("pokemonList");
-    const searchInput = document.getElementById("search");
+    const list = document.getElementById("list");
+    const search = document.getElementById("search");
     const counter = document.getElementById("counter");
 
-    function renderList(filter = "") {
-      const collected = JSON.parse(localStorage.getItem("collected") || "{}");
-      list.innerHTML = "";
+    let collected = JSON.parse(localStorage.getItem("collected") || "{}");
 
+    function updateCounter() {
+      const total = pokemon.length;
+      const count = Object.values(collected).filter(Boolean).length;
+      counter.textContent = `Collected: ${count} / ${total}`;
+    }
+
+    function renderList(filter = "") {
+      list.innerHTML = "";
       const filtered = pokemon.filter(([id, name]) =>
         name.toLowerCase().includes(filter.toLowerCase())
       );
-
       filtered.forEach(([id, name]) => {
         const item = document.createElement("div");
         item.className = "pokemon-item";
@@ -285,30 +293,30 @@
         const label = document.createElement("label");
         label.textContent = `${id}. ${name}`;
 
+        const link = document.createElement("a");
+        link.href = `https://www.tcgplayer.com/search/all/product?q=${encodeURIComponent(name)}&view=grid`;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = "🔍";
+
         item.appendChild(checkbox);
         item.appendChild(label);
+        item.appendChild(link);
         list.appendChild(item);
       });
-
       updateCounter();
     }
 
-    function updateCounter() {
-      const collected = JSON.parse(localStorage.getItem("collected") || "{}");
-      const count = Object.values(collected).filter(Boolean).length;
-      counter.textContent = `Collected: ${count} / ${pokemon.length}`;
-    }
-
-    searchInput.addEventListener("input", () => {
-      renderList(searchInput.value);
+    search.addEventListener("input", () => {
+      renderList(search.value);
     });
 
     renderList();
+  </script>
 
+  <script>
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("sw.js").then(() => {
-        console.log("Service Worker registered.");
-      });
+      navigator.serviceWorker.register("sw.js").catch(console.error);
     }
   </script>
 </body>
