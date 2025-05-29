@@ -1,8 +1,32 @@
+const CACHE_NAME = "pokemon-tracker-v2"; // Note the version bump
+const urlsToCache = [
+  "index.html",
+  "style.css",
+  "script.js",
+  "manifest.json",
+  "icon-192.png",
+  "icon-512.png"
+];
+
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open("pokemon-tracker-v1").then(cache => {
-      return cache.addAll(["index.html", "manifest.json", "icon-192.png", "icon-512.png"]);
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(urlsToCache);
     })
+  );
+});
+
+self.addEventListener("activate", event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames =>
+      Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      )
+    )
   );
 });
 
