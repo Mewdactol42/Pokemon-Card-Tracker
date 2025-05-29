@@ -1,10 +1,11 @@
 {
   "name": "Pokémon Card Tracker",
   "short_name": "Pokémon Tracker",
-  "start_url": "./index.html",
+  "start_url": "./index.html?homescreen=1",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "display_override": ["standalone", "browser"],
+  "background_color": "#f8f8f8",
+  "theme_color": "#f8f8f8",
   "icons": [
     {
       "src": "icon-192.png",
