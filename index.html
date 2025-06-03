@@ -1,65 +1,69 @@
-<!DOCTYPE html><html lang="en"><head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#ffffff">
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icon-192.png" sizes="192x192">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pokémon Card Tracker</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon-192.png" />
   <style>
     body {
       font-family: sans-serif;
       margin: 0;
-      padding: 0;
-      background: #f5f5f5;
+      padding: 1em;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
     }
-    .container {
-      padding: 10px;
+    h1 {
+      text-align: center;
     }
     input[type="text"] {
       width: 100%;
-      padding: 10px;
-      font-size: 1rem;
-      margin-bottom: 10px;
+      padding: 0.5em;
+      margin-bottom: 1em;
+      font-size: 1em;
     }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    li {
+    .pokemon-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px;
-      border-bottom: 1px solid #ddd;
-      background: white;
-      margin-bottom: 5px;
-      border-radius: 5px;
+      padding: 0.3em 0;
+      border-bottom: 1px solid #eee;
     }
-    .count {
+    .pokemon-item span {
+      flex-grow: 1;
+      margin-left: 0.5em;
+    }
+    .tcg-link {
+      margin-left: 0.5em;
+      text-decoration: none;
+    }
+    #counter {
+      margin: 1em 0;
       font-weight: bold;
-      margin-bottom: 10px;
     }
-    .reset-button {
-      margin: 10px;
-      padding: 8px 16px;
-      font-size: 1rem;
-      background-color: #e53935;
+    #reset {
+      display: inline-block;
+      margin-top: 1em;
+      padding: 0.5em 1em;
+      font-size: 1em;
+      background: #f44336;
       color: white;
       border: none;
       border-radius: 5px;
-    }
-    .search-icon {
-      margin-left: 10px;
       cursor: pointer;
     }
   </style>
-</head><body>
-  <div class="container">
-    <button id="resetButton" class="reset-button">Reset Progress</button>
-    <div class="count" id="count"></div>
-    <input type="text" id="search" placeholder="Search Pokémon...">
-    <ul id="pokemonList"></ul>
-  </div>  <script>
+</head>
+<body>
+  <h1>Pokémon Card Tracker</h1>
+  <input type="text" id="search" placeholder="Search Pokémon..." />
+  <div id="counter">Collected: 0 / 1025</div>
+  <div id="pokemon-list"></div>
+  <button id="reset">Reset Progress</button>
+
+  <script>
     const pokemonList = [
   [1, "Bulbasaur"], [2, "Ivysaur"], [3, "Venusaur"], [4, "Charmander"], [5, "Charmeleon"], [6, "Charizard"], [7, "Squirtle"], [8, "Wartortle"], [9, "Blastoise"], [10, "Caterpie"],
   [11, "Metapod"], [12, "Butterfree"], [13, "Weedle"], [14, "Kakuna"], [15, "Beedrill"], [16, "Pidgey"], [17, "Pidgeotto"], [18, "Pidgeot"], [19, "Rattata"], [20, "Raticate"],
@@ -252,70 +256,81 @@
       // ... continue with all Pokémon up to 1025
     ];
 
-    const listElement = document.getElementById("pokemonList");
-    const searchInput = document.getElementById("search");
-    const countElement = document.getElementById("count");
 
-    function updateCount() {
-      const total = pokemonList.length;
-      const checked = document.querySelectorAll("input[type='checkbox']:checked").length;
-      countElement.textContent = `Collected: ${checked} / ${total}`;
-    }
+    const pokemonListEl = document.getElementById("pokemon-list");
+    const searchEl = document.getElementById("search");
+
+    let filteredPokemonList = pokemonList;
 
     function saveProgress() {
-      const checkedItems = Array.from(document.querySelectorAll("input[type='checkbox']"))
-        .map((checkbox, index) => checkbox.checked ? index : null)
-        .filter(index => index !== null);
-      localStorage.setItem("pokemonProgress", JSON.stringify(checkedItems));
+      const progress = {};
+      document.querySelectorAll("input[type=checkbox]").forEach(checkbox => {
+        progress[checkbox.dataset.key] = checkbox.checked;
+      });
+      localStorage.setItem("collectionProgress", JSON.stringify(progress));
+      updateCounter();
     }
 
     function loadProgress() {
-      const data = localStorage.getItem("pokemonProgress");
-      return data ? JSON.parse(data) : [];
+      return JSON.parse(localStorage.getItem("collectionProgress") || "{}");
     }
 
-    function renderList(filter = "") {
-      listElement.innerHTML = "";
-      const progress = loadProgress();
+    function renderPokemonList(pokemonData) {
+      const savedProgress = loadProgress();
+      pokemonListEl.innerHTML = "";
 
-      pokemonList.forEach(([number, name], index) => {
-        if (name.toLowerCase().includes(filter.toLowerCase())) {
-          const li = document.createElement("li");
-          const label = document.createElement("label");
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-          checkbox.checked = progress.includes(index);
-          checkbox.addEventListener("change", () => {
-            saveProgress();
-            updateCount();
-          });
-          label.appendChild(checkbox);
-          label.append(` ${number}. ${name}`);
+      pokemonData.forEach(([dex, name]) => {
+        const key = `${dex}-${name}`;
+        const isChecked = savedProgress[key] || false;
 
-          const link = document.createElement("a");
-          link.href = `https://www.tcgplayer.com/search/all/product?q=${encodeURIComponent(name)}&view=grid`; 
-          link.target = "_blank";
-          link.innerHTML = "🔍";
-          link.className = "search-icon";
+        const label = document.createElement("label");
+        label.className = "pokemon-item";
 
-          li.appendChild(label);
-          li.appendChild(link);
-          listElement.appendChild(li);
-        }
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = isChecked;
+        checkbox.dataset.key = key;
+        checkbox.addEventListener("change", saveProgress);
+
+        const span = document.createElement("span");
+        span.textContent = `${dex}. ${name}`;
+
+        const link = document.createElement("a");
+        link.href = `https://www.tcgplayer.com/search/all/product?q=${encodeURIComponent(name)}&view=grid`;
+        link.target = "_blank";
+        link.innerHTML = "🔍";
+        link.className = "tcg-link";
+
+        label.appendChild(checkbox);
+        label.appendChild(span);
+        label.appendChild(link);
+        pokemonListEl.appendChild(label);
       });
-      updateCount();
+
+      updateCounter();
     }
 
-    searchInput.addEventListener("input", e => {
-      renderList(e.target.value);
+    function updateCounter() {
+      const total = pokemonList.length;
+      const savedProgress = loadProgress();
+      const collected = Object.values(savedProgress).filter(Boolean).length;
+      document.getElementById("counter").textContent = `Collected: ${collected} / ${total}`;
+    }
+
+    searchEl.addEventListener("input", () => {
+      const query = searchEl.value.toLowerCase();
+      filteredPokemonList = pokemonList.filter(([dex, name]) =>
+        name.toLowerCase().includes(query)
+      );
+      renderPokemonList(filteredPokemonList);
     });
 
-    document.getElementById("resetButton").addEventListener("click", () => {
-      if (confirm("Are you sure you want to reset your collection progress?")) {
-        localStorage.clear();
-        location.reload();
-      }
+    document.getElementById("reset").addEventListener("click", () => {
+      localStorage.removeItem("collectionProgress");
+      renderPokemonList(filteredPokemonList);
     });
 
-    renderList();
-  </script></body></html>
+    renderPokemonList(pokemonList);
+  </script>
+</body>
+</html>
