@@ -277,10 +277,20 @@
     function loadProgress() {
       return JSON.parse(localStorage.getItem("collectionProgress") || "{}");
     }
+    function saveSingleProgress(key, isChecked) {
+  const savedProgress = loadProgress();
+  savedProgress[key] = isChecked;
+  localStorage.setItem("collectionProgress", JSON.stringify(savedProgress));
+  updateCounter();
+}
+
 
     function renderPokemonList(pokemonData) {
       const savedProgress = loadProgress();
       pokemonListEl.innerHTML = "";
+      const progress = loadProgress();
+checkbox.checked = progress[key] || false;
+
 
       pokemonData.forEach(([dex, name]) => {
         const key = `${dex}-${name}`;
@@ -293,7 +303,10 @@
         checkbox.type = "checkbox";
         checkbox.checked = isChecked;
         checkbox.dataset.key = key;
-        checkbox.addEventListener("change", saveProgress);
+        checkbox.addEventListener("change", () => {
+  saveSingleProgress(checkbox.dataset.key, checkbox.checked);
+});
+
 
         const span = document.createElement("span");
         span.textContent = `${dex}. ${name}`;
