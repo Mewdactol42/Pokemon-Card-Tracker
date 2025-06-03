@@ -263,13 +263,16 @@
     let filteredPokemonList = pokemonList;
 
     function saveProgress() {
-      const progress = {};
-      document.querySelectorAll("input[type=checkbox]").forEach(checkbox => {
-        progress[checkbox.dataset.key] = checkbox.checked;
-      });
-      localStorage.setItem("collectionProgress", JSON.stringify(progress));
-      updateCounter();
-    }
+  const savedProgress = loadProgress();
+
+  document.querySelectorAll("input[type=checkbox]").forEach(checkbox => {
+    savedProgress[checkbox.dataset.key] = checkbox.checked;
+  });
+
+  localStorage.setItem("collectionProgress", JSON.stringify(savedProgress));
+  updateCounter();
+}
+
 
     function loadProgress() {
       return JSON.parse(localStorage.getItem("collectionProgress") || "{}");
